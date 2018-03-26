@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>War Game</title>
+  <script src="js/utility/common.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/library/jquery-3.3.1.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/library/astar.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/game/game.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/utility/mouse.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/game/singleplayer.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/data/maps.js" type="text/javascript" charset="utf-8"></script>
+
+  <!-- Definitions for game entities -->
+  <script src="js/entities/buildings.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/entities/vehicles.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/entities/aircraft.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/entities/terrian.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/entities/bullets.js" type="text/javascript" charset="utf-8"></script>
+
+  <!-- Multiplayer -->
+  <script src="js/game/multiplayer.js" type="text/javascript" charset="utf-8"></script>
+
+  <script src="js/utility/sidebar.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/utility/fog.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/utility/sounds.js" type="text/javascript" charset="utf-8"></script>
+
+  <link rel="stylesheet" href="css/styles.css" type="text/css" media="screen" charset="utf-8">
+</head>
+<body>
+  <div id="gamecontainer">
+    <div id="gamestartscreen" class="gamelayer">
+      <span id="singleplayer" onclick="singleplayer.start()">Campaign</span>
+      <span id="multiplayer" onclick="multiplayer.start()">Multiplayer</span>
+    </div>
+
+    <div id="missionscreen" class="gamelayer">
+      <input type="button" id="entermission" onclick="singleplayer.play()">
+      <input type="button" id="exitmission" onclick="singleplayer.exit()">
+      <div id="missionbriefing"></div>
+    </div>
+    <div id="gameinterfacescreen" class="gamelayer">
+      <div id="gamemessages"></div>
+      <div id="callerpicture"></div>
+      <div id="cash"></div>
+      <div id="sidebarbuttons">
+        <input type="button" id="starportbutton" title="Starport">
+        <input type="button" id="turretbutton" title="Turret">
+        <input type="button" id="placeholder1" disabled>
+        <input type="button" id="scouttankbutton" title="ScoutTank">
+        <input type="button" id="heavytankbutton" title="HeavyTank">
+        <input type="button" id="harvesterbutton" title="Harvester">
+        <input type="button" id="chopperbutton" title="Copter">
+        <input type="button" id="wraithbutton" title="Wraith">
+        <input type="button" id="placeholder2" disabled>
+      </div>
+      <canvas id="gamebackgroundcanvas" height="400" width="480"></canvas>
+      <canvas id="gameforegroundcanvas" height="400" width="480"></canvas>
+      <input type="text" id="chatmessage">
+    </div>
+    <div id="messageboxscreen" class="gamelayer">
+      <div id="messagebox">
+        <span id="messageboxtext"></span>
+        <input type="button" id="messageboxok" onclick="game.messageBoxOk()">
+        <input type="button" id="messageboxcancel" onclick="game.messageBoxCancel()">
+      </div>
+    </div>
+    <div id="loadingscreen" class="gamelayer">
+      <div id="loadingmessage"></div>
+    </div>
+
+    <!-- Multiplayer Lobby -->
+    <div id="multiplayerlobbyscreen" class="gamelayer">
+      <select id="multiplayergameslist" size="10"></select>
+      <input type="button" id="multiplayerjoin" onclick="multiplayer.join()">
+      <input type="button" id="multiplayercancel", onclick="multiplayer.cancel()">
+    </div>
+  </div>
+</body>
+</html>
