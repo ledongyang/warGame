@@ -1,6 +1,6 @@
 var buildings = {
   list: {
-    base: {
+    'base': {
       name: 'base',
       // Properties for drawing the object
       pixelWidth: 60,
@@ -42,7 +42,7 @@ var buildings = {
         }
       }
     },
-    starport: {
+    'starport': {
       name: 'starport',
       pixelWidth: 40,
       pixelHeight: 60,
@@ -114,6 +114,107 @@ var buildings = {
         }
       }
     },
+    'harvester': {
+      name: 'harvester',
+      pixelWidth: 40,
+      pixelHeight: 60,
+      baseWidth: 40,
+      baseHeight: 20,
+      pixelOffsetX: -2,
+      pixelOffsetY: 40,
+      buildableGrid: [
+        [1, 1]
+      ],
+      passableGrid: [
+        [1, 1]
+      ],
+      sight: 3,
+      cost: 5000,
+      hitPoints: 300,
+      spriteImages: [
+        {name: 'deploy', count: 17},
+        {name: 'healthy', count: 3},
+        {name: 'damaged', count: 1}
+      ]
+    },
+    'ground-turret': {
+      name: 'ground-turret',
+      canAttack: true,
+      canAttackLand: true,
+      canAttackAir: false,
+      weaponType: 'cannon-ball',
+      action: 'guard', // Default action is guard unlike other buildings
+      direction: 0, // Face upward (0) by default
+      directions: 8, // Total of 8 turret directions allowed (0-7)
+      orders: {type: 'guard'},
+      pixelWidth: 38,
+      pixelHeight: 32,
+      baseWidth: 20,
+      baseHeight: 18,
+      cost: 1500,
+      pixelOffsetX: 9,
+      pixelOffsetY: 12,
+      buildableGrid: [
+        [1]
+      ],
+      passableGrid: [
+        [1]
+      ],
+      sight: 5,
+      hitPoints: 200,
+      spriteImages: [
+        {name: 'teleport', count: 9},
+        {name: 'healthy', count: 1, directions: 8},
+        {name: 'damaged', count: 1}
+      ],
+      isValidTarget: isValidTarget,
+      findTargetsInSight: findTargetsInSight,
+      processOrders: function() {
+        if (this.reloadTimeLeft) {
+          this.reloadTimeLeft--
+        }
+        // Damaged turret cannot attack
+        if (this.lifeCode !== 'healthy') {
+          return
+        }
+        switch(this.orders.type) {
+          case 'guard':
+            var targets = this.findTargetsInSight()
+            if (targets.length > 0) {
+              this.orders = {type: 'attack', to: targets[0]}
+            }
+            break
+          case 'attack':
+            if (!this.orders.to || this.orders.to.lifeCode === 'dead' || !this.isValidTarget(this.orders.to) || (Math.pow(this.orders.to.x-this.x, 2) + Math.pow(this.orders.to.y-this.y, 2)) > Math.pow(this.sight, 2)) {
+              var targets = this.findTargetsInSight()
+              if (targets.length > 0) {
+                this.orders.to = targets[0]
+              } else {
+                this.orders = {type: 'guard'}
+              }
+            }
+            if (this.orders.to) {
+              var newDirection = findFiringAngle(this.orders.to, this, this.directions)
+              var difference = angleDiff(this.direction, newDirection, this.directions)
+              var turnAmount = this.turnSpeed*game.turnSpeedAdjustmentFactor
+              if (Math.abs(difference) > turnAmount) {
+                this.direction = wrapDirection(this.direction+turnAmount*Math.abs(difference)/difference, this.directions)
+                return
+              } else {
+                this.direction = newDirection
+                if (!this.reloadTimeLeft) {
+                  this.reloadTimeLeft = bullets.list[this.weaponType].reloadTime
+                  var angleRadians = -(Math.round(this.direction)/this.directions)*2*Math.PI
+                  var bulletX = this.x+0.5-(1*Math.sin(angleRadians))
+                  var bulletY = this.y+0.5-(1*Math.cos(angleRadians))
+                  var bullet = game.add({name: this.weaponType, type: 'bullets', x: bulletX, y: bulletY, direction: this.direction, target: this.orders.to})
+                }
+              }
+            }
+            break
+        }
+      }
+    }
   },
   defaults: {
     // Default function for animating a building
