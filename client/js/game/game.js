@@ -164,5 +164,68 @@ var game = {
     if (game.running) {
       requestAnimationFrame(game.drawingLoop)
     }
-  }
+  },
+
+  resetArrays: function() {
+    game.counter = 1
+    game.items = []
+    game.sortedItems = []
+    game.buildings = []
+    game.vehicles = []
+    game.aircraft = []
+    game.terrain = []
+    game.triggerdEvents = []
+    game.selectedItems = []
+    game.sortedItems = []
+    game.bullets = []
+  },
+
+  add: function(itemDetails) {
+    // Set a unique id for the item
+    if (!itemDetails.uid) {
+      itemDetails.uid = game.counter++
+    }
+    var item = window[itemDetails.type].add(itemDetails)
+    // Add the item to the items array
+    game.items.push(item)
+    // Add the item to the type specific array
+    game[item.type].push(item)
+
+    if (item.type === 'buildings' || item.type === 'terrain') {
+      game.currentMapPassableGrid = undefined
+    }
+    if (item.type === 'bullets') {
+      sounds.play(item.name)
+    }
+    return item
+  },
+
+  remove: function(item) {
+    // Unselect item if it is selected
+    item.selected = false
+    for (var i = game.selectedItems.length - 1; i >= 0; i--) {
+      if (game.selectedItems[i].uid === item.uid) {
+        game.selectedItems.splice(i, 1)
+        break
+      }
+    }
+    // Remove item from the items array
+    for (var i = game.items.length - 1; i >= 0; i--) {
+      if (game.items[i].uid === item.uid) {
+        game.items.splice(i, 1)
+        break
+      }
+    }
+    // Remove items from the type specific array
+    for (var i = game[item.type].length - 1; i >= 0; i--) {
+      if (game[item.type][i].uid === item.uid) {
+        game[item.type].splice(i, 1)
+        break
+      }
+    }
+
+    if (item.type === 'buildings' || item.type === 'terrain') {
+      game.currentMapPassableGrid = undefined
+    }
+  },
 }
