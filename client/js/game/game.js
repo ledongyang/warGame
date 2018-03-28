@@ -165,7 +165,6 @@ var game = {
       requestAnimationFrame(game.drawingLoop)
     }
   },
-
   resetArrays: function() {
     game.counter = 1
     game.items = []
@@ -179,7 +178,6 @@ var game = {
     game.sortedItems = []
     game.bullets = []
   },
-
   add: function(itemDetails) {
     // Set a unique id for the item
     if (!itemDetails.uid) {
@@ -199,7 +197,6 @@ var game = {
     }
     return item
   },
-
   remove: function(item) {
     // Unselect item if it is selected
     item.selected = false
@@ -259,4 +256,215 @@ var game = {
       game.selectedItems.push(item)
     }
   },
+
+  // Send command to either singleplayer or multiplayer object
+  sendCommand: function(uids, details) {
+    if (game.type === 'singleplayer') {
+      singleplayer.sendCommand(uids, details)
+    } else {
+      multiplayer.sendCommand(uids, details)
+    }
+  },
+  getItemByUid: function(uid) {
+    for (var i = game.items.length - 1; i >= 0; i--) {
+      if (game.items[i].uid === uid) {
+        return game.items[i]
+      }
+    }
+  },
+  // Receive command from singleplayer or multiplayer object and send it to units
+  processCommand: function(uids, details) {
+    // In case the target 'to' object is in terms of uid, fetch the target object
+    var toObject
+    if (details.toUid) {
+      toObject = game.getItemByUid(details.toUid)
+      if (!toObject || toObject.lifeCode === 'dead') {
+        // To object no longer exists. Invalid command
+        return
+      }
+    }
+
+    for (var i in uids) {
+      var uid = uids[i]
+      var item = game.getItemByUid(uid)
+      // If uid is a valid item, set the order for the item
+      if (item) {
+        item.orders = $.extend([], details)
+        if (toObject) {
+          item.orders.to = toObject
+        }
+      }
+    }
+  },
+
+  // Movement related properties
+  speedAdjustmentFactor: 1/64,
+  turnSpeedAdjustmentFactor: 1/8,
+
+  // Rebuild passable grid
+  rebuildPassableGrid: function() {
+    game.currentMapPassableGrid = $.extend(true, [], game.currentMapTerrainGrid)
+    for (var i = game.items.length - 1; i >= 0; i--) {
+      var item = game.items[i]
+      if (item.type === 'buildings' || item.type === 'terrain') {
+        for (var y = item.passableGrid.length - 1; y >= 0; y--) {
+          for (var x = item.passableGrid[y].length - 1; x >= 0; x--) {
+            if (item.passableGrid[y][x]) {
+              game.currentMapPassableGrid[item.y+y][item.x+x] = 1
+            }
+          }
+        }
+      }
+    }
+  },
+
+  // Rebuild passable grid
+  rebuildBuildableGrid: function() {
+    game.currentMapBuildableGrid = $.extend(true, [], game.currentMapTerrainGrid)
+    for (var i = game.items.length - 1; i >= 0; i--) {
+      var item = game.items[i]
+      if (item.type === 'buildings' || item.type === 'terrain') {
+        for (var y = item.buildableGrid.length - 1; y >= 0; y--) {
+          for (var x = item.buildableGrid[y].length - 1; x >= 0; x--) {
+            if (item.buildableGrid[y][x]) {
+              game.currentMapBuildableGrid[item.y+y][item.x+x] = 1
+            }
+          }
+        }
+      } else if (item.type === 'vehicles') {
+        // Mark all squares under or near the vehicle as unbuildable
+        var radius = item.radius/game.gridSize
+        var x1 = Math.max(Math.floor(item.x-radius), 0)
+        var x2 = Math.min(Math.floor(item.x+radius), game.currentLevel.mapGridWidth-1)
+        var y1 = Math.max(Math.floor(item.y-radius), 0)
+        var y2 = Math.min(Math.floor(item.y+radius), game.currentLevel.mapGridHeight-1)
+        for (var x = x1; x <= x2; x++) {
+          for (var y = y1; y <= y2; y++) {
+            game.currentMapBuildableGrid[y][x] = 1
+          }
+        }
+      }
+    }
+  },
+
+  // Functions for communicating with player
+  characters: {
+    'system': {
+      'name': 'System',
+      'image': 'images/characters/system.png'
+    },
+    'op': {
+      'name': 'Operator',
+      'image': 'images/characters/girl1.png'
+    },
+    'pilot': {
+      'name': 'Pilot',
+      'image': 'images/characters/girl2.png'
+    },
+    'driver': {
+      'name': 'Driver',
+      'image': 'images/characters/man1.png'
+    }
+  },
+  showMessage: function(from, message) {
+    sounds.play('message-received')
+    var character = game.characters[from]
+    if (character) {
+      from = character.name
+      if (character.image) {
+        $('#callerpicture').html('<img src="'+character.image+'"/>')
+        // hide the profile picture after six seconds
+        setTimeout(function() {
+          $('#callerpicture').html('')
+        }, 6000);
+      }
+    }
+    // Append message to messages pane and scroll to the bottom
+    var existingMessage = $('#gamemessages').html()
+    var newMessage = existingMessage+'<span>'+from+': </span>'+message+'<br>'
+    $('#gamemessages').html(newMessage)
+    $('#gamemessages').animate({scrollTop: $('#gamemessages').prop('scrollHeight')})
+  },
+
+  /* Message Box Related Code */
+  messageBoxOkCallback: undefined,
+  messageBoxCancelCallback: undefined,
+  showMessageBox: function(message, onOK, onCancel) {
+    // Set message box text
+    $('#messageboxtext').html(message)
+    // Set message box ok and cancel handlers and enable buttons
+    if (!onOK) {
+      game.messageBoxOkCallback = undefined
+    } else {
+      game.messageBoxOkCallback = onOK
+    }
+    if (!onCancel) {
+      game.messageBoxCancelCallback = undefined
+      $('#messageboxcancel').hide()
+    } else {
+      game.messageBoxCancelCallback = onCancel
+      $('#messageboxcancel').show()
+    }
+    // Display the message box and wait for user to click a button
+    $('#messageboxscreen').show()
+  },
+  messageBoxOk: function() {
+    $('#messageboxscreen').hide()
+    if (game.messageBoxOkCallback) {
+      game.messageBoxOkCallback()
+    }
+  },
+  messageBoxCancel: function() {
+    $('#messageboxscreen').hide()
+    if (game.messageBoxCancelCallback) {
+      game.messageBoxCancelCallback()
+    }
+  },
+
+  // Methods for handling triggered events within the game
+  initTrigger: function(trigger) {
+    if (trigger.type === 'timed') {
+      trigger.timeout = setTimeout(function() {
+        game.runTrigger(trigger)
+      }, trigger.time);
+    } else if (trigger.type === 'conditional') {
+      trigger.interval = setInterval(function() {
+        game.runTrigger(trigger)
+      }, 1000)
+    }
+  },
+  runTrigger: function(trigger) {
+    if (trigger.type === 'timed') {
+      // Re-initialize the trigger based on repeat settings
+      if (trigger.repeat) {
+        game.initTrigger(trigger)
+      }
+      // Call the trigger action
+      trigger.action(trigger)
+    } else if (trigger.type === 'conditional') {
+      // Check if the condition has been satisfied
+      if (trigger.condition()) {
+        // Clear the trigger
+        game.clearTrigger(trigger)
+        // Call the trigger action
+        trigger.action(trigger)
+      }
+    }
+  },
+  clearTrigger: function(trigger) {
+    if (trigger.type === 'timed') {
+      clearTimeout(trigger.timeout)
+    } else if (trigger.type === 'conditional') {
+      clearInterval(trigger.interval)
+    }
+  },
+  end: function() {
+    // Clear any game triggers
+    if (game.currentLevel.triggers) {
+      for (var i = game.currentLevel.triggers.length - 1; i >= 0; i--) {
+        game.clearTrigger(game.currentLevel.triggers[i])
+      }
+    }
+    game.running = false
+  }
 }
