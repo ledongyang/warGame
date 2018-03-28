@@ -22,7 +22,7 @@
       clearTimeout(id)
     }
   }
-}())
+})()
 
 var loader = {
   loaded: true,
@@ -125,4 +125,101 @@ function addItem(details){
   item.life = item.hitPoints
   $.extend(item, details)
   return item
+}
+
+/* Common functions for turning and movement */
+
+// Finds the angle between two objects in terms of a direction (where 0 <= angle < directions)
+function findAngle(object, unit, directions) {
+  var dy = object.y - unit.y
+  var dx = object.x - unit.x
+  // Convert arctan to value between (0 - directions)
+  var angle = wrapDirection(directions/2 - (Math.atan2(dx, dy)*directions/(2*Math.PI)), directions)
+  return angle
+}
+
+// Find the angle between bullet and target
+function findFiringAngle(target, source, directions) {
+  var dy = target.y - source.y
+  var dx = target.x - source.x
+
+  if (target.type === 'buildings') {
+    dy += target.baseWidth/2/game.gridSize
+    dx += target.baseHeight/2/game.gridSize
+  } else if (target.type === 'aircraft') {
+    dy -= target.pixelShadowHeight/game.gridSize
+  }
+
+  if (source.type === 'buildings') {
+    dy -= source.baseWidth/2/game.gridSize
+    dx -= source.baseHeight/2/game.gridSize
+  } else if (source.type === 'aircraft') {
+    dy += source.pixelShadowHeight/game.gridSize
+  }
+
+  // Convert Arctan to value between (0-7)
+  var angle = wrapDirection(directions/2-(Math.atan2(dx, dy)*directions/(2*Math.PI)), directions)
+  return angle
+}
+
+// Returns the smallest difference (value ranging between -directions/2 to +directions/2) between two angles (where 0 <= angle < directions)
+function angleDiff(angle1, angle2, directions) {
+  if (angle1 >= directions/2) {
+    angle1 = angle1 - directions
+  }
+  if (angle2 >= directions/2) {
+    angle2 = angle2 - directions
+  }
+  var diff = angle2 - angle1
+  if (diff < -directions/2) {
+    diff += directions
+  }
+  if (diff > directions/2) {
+    diff -= directions
+  }
+  return diff
+}
+
+// Wrap value of direction so that it lies between 0 and directions-1
+function wrapDirection(direction, directions) {
+  if (direction < 0) {
+    direction += directions
+  }
+  if (direction >= directions) {
+    direction -= directions
+  }
+  return direction
+}
+
+/* Common Functions related to combat */
+function isValidTarget(item) {
+  return item.team !== this.team &&  (this.canAttackLand && (item.type === 'buildings' || item.type === 'vehicles') || (this.canAttackAir && (item.type === 'aircraft')))
+}
+
+function findTargetsInSight(increment) {
+  if (!increment) {
+    increment = 0
+  }
+  var targets = []
+  for (var i = game.items.length - 1; i >= 0; i--) {
+    var item = game.items[i]
+    if (this.isValidTarget(item)) {
+      if (Math.pow(item.x-this.x, 2) + Math.pow(item.y-this.y, 2) < Math.pow(this.sight+increment, 2)) {
+        targets.push(item)
+      }
+    }
+  }
+  // Sort targets based on distance from attacker
+  var attacker = this
+  targets.sort(function(a, b) {
+    return (Math.pow(a.x-attacker.x, 2) + Math.pow(a.y-attacker.y, 2)) - (Math.pow(b.x-attacker.x, 2) + Math.pow(b.y-attacker.y, 2))
+  })
+
+  return targets
+}
+
+// Check if an item is dead
+function isItemDead(uid) {
+  var item = game.getItemByUid(uid)
+  return (!item || item.lifeCode === 'dead')
 }
