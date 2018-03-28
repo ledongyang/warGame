@@ -217,6 +217,13 @@ var buildings = {
     }
   },
   defaults: {
+    type: 'buildings',
+    animationIndex: 0,
+    direction: 0,
+    orders: {type: 'stand'},
+    action: 'stand',
+    selected: false,
+    selectable: true,
     // Default function for animating a building
     animate: function() {
       // Consider an item healthy if it has more than 40% life
@@ -323,6 +330,27 @@ var buildings = {
           break
       }
     },
+    drawLifeBar: function() {
+      var x = this.drawingX + this.pixelOffsetX
+      var y = this.drawingY - 2*game.lifeBarHeight
+      game.foregroundContext.fillStyle = (this.lifeCode === 'healthy') ? game.healthBarHealthyFillColor : game.healthBarDamagedFillColor
+
+      game.foregroundContext.fillRect(x, y, this.baseWidth*this.life/this.hitPoints, game.lifeBarHeight)
+
+      game.foregroundContext.strokeStyle = game.healthBarBorderColor
+      game.foregroundContext.lineWidth = 1
+
+      game.foregroundContext.strokeRect(x, y, this.baseWidth, game.lifeBarHeight)
+    },
+    drawSelection: function() {
+      var x = this.drawingX + this.pixelOffsetX
+      var y = this.drawingY + this.pixelOffsetY
+      game.foregroundContext.strokeStyle = game.selectionBorderColor
+      game.foregroundContext.lineWidth = 1
+      game.foregroundContext.fillStyle = game.selectionFillColor
+      game.foregroundContext.fillRect(x-1, y-1, this.baseWidth+2, this.baseHeight+2)
+      game.foregroundContext.strokeRect(x-1, y-1, this.baseWidth+2, this.baseHeight+2)
+    },
     // Default function for drawing a building
     draw: function() {
       // Absoulte x and y pixel coordinates
@@ -341,5 +369,7 @@ var buildings = {
       var colorOffset = colorIndex * this.pixelHeight
       game.foregroundContext.drawImage(this.spriteSheet, this.imageOffset*this.pixelWidth, colorOffset, this.pixelWidth, this.pixelHeight, x, y, this.pixelWidth, this.pixelHeight)
     }
-  }
+  },
+  load: loadItem,
+  add: addItem
 }
