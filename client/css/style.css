@@ -1,7 +1,8 @@
 #gamecontainer {
   width: 640px;
   height: 480px;
-  background: url(../images/splashscreen.png);
+  background: url(../images/splashscreen.jpg) no-repeat center;
+  background-size: 640px 480px;
   border: 1px solid black;
 }
 
@@ -14,20 +15,20 @@
 
 /* Game Starting Screen */
 #gamestartscreen {
-  padding-top: 320px;
-  text-align: left;
-  padding-left: 50px;
-  width: 590px;
+  padding-top: 50px;
+  text-align: center;
   height: 160px;
+  margin: 0 auto;
 }
 
 #gamestartscreen span {
   margin: 20px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 48px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-size: 36px;
+  display: block;
   cursor: pointer;
   color: white;
-  text-shadow: -2px 0 purple, 0 2px purple, 2px 0 purple, 0 -2px purple;
+  text-shadow: -2px 0 #0a3e61, 0 2px #0a3e61, 2px 0 #0a3e61, 0 -2px #0a3e61;
 }
 
 #gamestartscreen span:hover {
@@ -36,6 +37,13 @@
 
 #gamestartscreen #multiplayer {
   text-decoration: line-through;
+}
+
+#gametitle {
+  color: white;
+  font-family: "Gill Sans", sans-serif;
+  font-size: 72px;
+  text-align: center;
 }
 
 /* Loading Screen */
