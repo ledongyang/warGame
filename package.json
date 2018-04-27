@@ -5,11 +5,16 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./server/server.js",
+    "deploy": "gh-pages -d client",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Michael Yang <ledongyang@gmail.com> (https://github.com/ledongyang)",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.16.3",
     "websocket": "^1.0.25"
+  },
+  "devDependencies": {
+    "gh-pages": "^1.1.0"
   }
 }

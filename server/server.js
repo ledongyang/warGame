@@ -1,11 +1,16 @@
 var WebSocketServer = require('websocket').server
 var http = require('http')
-const PORT = process.env.PORT || 8080
+var express = require('express')
+var path = require('path')
+var PORT = process.env.PORT || 8080
+
+var app = express()
 
 // Create a simple web server that returns the same reponse for any request
-var server = http.createServer(function(request, response) {
-  response.writeHead(200, {'Content-Type': 'text/plain'})
-  response.end('This is the node.js HTTP server.')
+var server = http.createServer(app)
+
+app.get('/', function(req, res) {
+  res.sendFile(path.join(__dirname, '../client', 'index.html'))
 })
 
 server.listen(PORT, function() {
