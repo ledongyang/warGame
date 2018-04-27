@@ -1,5 +1,6 @@
 var WebSocketServer = require('websocket').server
 var http = require('http')
+const PORT = process.env.PORT || 8080
 
 // Create a simple web server that returns the same reponse for any request
 var server = http.createServer(function(request, response) {
@@ -7,7 +8,7 @@ var server = http.createServer(function(request, response) {
   response.end('This is the node.js HTTP server.')
 })
 
-server.listen(8080, function() {
+server.listen(PORT, function() {
   console.log('Server has started listening on port 8080.')
 })
 

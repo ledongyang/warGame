@@ -1,6 +1,6 @@
 var multiplayer = {
   // Open multiplayer game lobby
-  websocket_url: 'ws://localhost:8080/',
+  websocket_url: location.origin.replace(/^http/, 'ws'),
   websocket: undefined,
   start: function() {
     game.type = 'multiplayer'
